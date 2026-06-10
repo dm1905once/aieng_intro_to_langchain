@@ -1,31 +1,44 @@
-# Write your solution below
-# install the required packages:
-# pip install langchain-core python-dotenv langchain-openai
-
 from langchain_core.prompts import PromptTemplate
-from langchain_openai import ChatOpenAI
+from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+from langchain_community.document_loaders import DirectoryLoader, TextLoader
+from langchain_chroma import Chroma
 import dotenv
 import os
 
+# Environment
 dotenv.load_dotenv()
 
+# OpenAI
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 llm = ChatOpenAI(
     base_url=os.getenv("BASE_URL")
 )
 
-question = input()
-template = PromptTemplate.from_template(
-    """
-    You are a helpful assistant who answers questions about planets in the solar system users may have. You are asked: {planet}.
-    Your answer should be 4 lines, each line providing details about the following aspects:
-        Physical characteristics of the planet (size, composition, atmosphere);
-        Notable features of the planet (rings, moons, surface conditions)
-        Scientific or historical significance about the planet
-        Fun or surprising facts about the planet
-    """
+# Load documents
+loader = DirectoryLoader(
+    path="planets/",
+    glob="**/*.txt",
+    loader_cls=TextLoader,
+    show_progress=True
+)
+documents = loader.load()
+
+# Set up embedding model
+embeddings_model = OpenAIEmbeddings(
+    model="text-embedding-ada-002",
+    base_url=os.getenv("BASE_URL"),
 )
 
-prompt = template.invoke({"planet": question})
-response = llm.invoke(prompt)
-print(response.content)
+# Create vector db
+db = Chroma(
+    collection_name="planets",
+    embedding_function=embeddings_model
+)
+
+# add documents
+db.add_documents(documents=documents)
+
+# Run queries
+query = input()
+results = db.similarity_search(query)
+print(results[0].page_content)
