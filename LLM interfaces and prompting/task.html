@@ -1,0 +1,58 @@
+<div class="step-text">
+<p></p><h5 id="theory">Theory</h5><p>LangChain offers prompt templates that streamline the process of crafting prompts for AI models. This helps ensure that the generated responses meet our requirements. Let's see how LangChain makes it easier to structure prompts using templates.</p><p><strong>Prompt templates</strong> transform user input and parameters into structured instructions for an LLM. They help shape the model’s response by providing context, ensuring clarity, and guiding it to generate relevant and coherent output. LangChain provides various prompts templates to cater for different use cases: <a href="https://reference.langchain.com/python/langchain-core/prompts/chat/ChatPromptTemplate" rel="noopener noreferrer nofollow" target="_blank">ChatPromptTemplate</a>, <a href="https://reference.langchain.com/python/langchain-core/prompts/few_shot/FewShotPromptTemplate" rel="noopener noreferrer nofollow" target="_blank">FewShotPromptTemplate</a>, <a href="https://reference.langchain.com/python/langchain-core/prompts/image/ImagePromptTemplate" rel="noopener noreferrer nofollow" target="_blank">ImagePromptTemplate</a>, and so on. In the example below, we use the <code class="language-python">PromptTemplate</code> class:</p><pre><code class="language-python"># install the required packages:
+# pip install langchain-groq langchain-core python-dotenv
+
+from langchain_core.prompts import PromptTemplate
+from langchain_groq import ChatGroq
+import dotenv
+
+dotenv.load_dotenv()
+
+llm = ChatGroq(model="llama-3.3-70b-versatile", temperature=0.0, max_retries=2)
+
+template = PromptTemplate.from_template("Explain {concept} in simple terms. Your output should be concise and informative.")
+
+prompt = template.invoke({"concept": "black holes"})
+response = llm.invoke(prompt)
+print(response.content)</code></pre><p>As shown here, we can pass the concept as a variable instead of hard-coding it. This flexibility allows us to incorporate user queries dynamically when constructing prompts, making them more adaptable to different inputs. Expand the section below to explore an example using the <code class="language-python">FewShotPromptTemplate</code> class. This approach enhances the model's response quality by including example question-answer pairs, helping the LLM generate more accurate, well-formatted, and contextually relevant outputs.</p><details><summary>Code section</summary><div><pre><code class="language-python"># install the required packages:
+# pip install langchain-groq langchain-core python-dotenv
+
+from langchain_core.prompts import PromptTemplate
+from langchain_core.prompts import FewShotPromptTemplate
+from langchain_groq import ChatGroq
+import dotenv
+
+dotenv.load_dotenv()
+
+llm = ChatGroq(
+    model="mixtral-8x7b-32768",
+    temperature=0.0,
+    max_retries=2
+)
+
+examples = [
+    {"input": "What is AI?", "output": "AI is the simulation of human intelligence by machines."},
+    {"input": "What is Machine Learning?", "output": "Machine Learning is a subset of AI that allows computers to learn from data."},
+]
+
+example_template = PromptTemplate.from_template("Q: {input}\nA: {output}")
+
+few_shot_prompt = FewShotPromptTemplate(
+    examples=examples,
+    example_prompt=example_template,
+    suffix="Q: {question}\nA:",
+    input_variables=["question"],
+)
+
+final_prompt = few_shot_prompt.format(question="What is Deep Learning?")
+
+response = llm.invoke(final_prompt)
+
+print(response.content)</code></pre></div></details><h5 id="description">Description</h5><p>Now, imagine you are building a question-answering application that provides responses about planets. Instead of requiring users to type full questions, your solution should allow them to input only the planet's name, and the system will automatically format the query using a prompt template. This ensures consistency in how the LLM interprets the request.</p><p>Additionally, to enhance response quality, your implementation should leverage the few-shot prompting approach by including example question-answer pairs. These examples will help the LLM generate well-structured, contextually rich, and precise answers by following a predefined pattern.</p><p>The final output should provide key details such as the planet’s size, atmosphere, notable features, and any interesting facts.</p><h5 id="objectives">Objectives</h5><p>Here are the objectives for this stage:</p><ul><li><p>The prompt template should take a planet’s name as input and transform it into a well-structured question for the LLM;</p></li><li><p>Provide examples to guide the AI’s response style, using the appropriate template;</p></li><li><p>Ensure responses are informative by prompting the AI to include essential planetary details such as:</p><ul><li><p>Physical characteristics (size, composition, atmosphere);</p></li><li><p>Notable features (rings, moons, surface conditions);</p></li><li><p>Scientific or historical significance;</p></li><li><p>Fun or surprising facts;</p></li></ul></li><li><p>Format the output for readability to make it easy for users to extract useful information at a glance;</p></li><li><p>This template should work for any planet, allowing users to inquire about multiple celestial bodies effortlessly.</p></li></ul><h5 id="examples">Examples</h5><p>The greater-than symbol followed by a space (<code class="language-python">&gt; </code>) represents the user input. Note that it's not part of the input.</p><p><strong>Example 1: </strong><em>Jupiter</em></p><pre><code class="language-bash">&gt; Jupiter
+Jupiter is the largest planet in the solar system. 
+It is a gas giant primarily composed of hydrogen and helium. 
+It has a Great Red Spot, a massive storm, and at least 79 known moons, including Ganymede, the largest moon in the solar system.</code></pre><p><strong>Example 2: </strong><em>Mars</em></p><pre><code class="language-bash">&gt; Mars
+Mars is the fourth planet from the Sun. 
+It has a thin atmosphere composed mainly of carbon dioxide and is known for its red appearance due to iron oxide on its surface. 
+Notable features include Olympus Mons, the largest volcano in the solar system, and Valles Marineris, a vast canyon system.</code></pre>
+</div>

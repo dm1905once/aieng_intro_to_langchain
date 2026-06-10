@@ -1,0 +1,83 @@
+<div class="step-text">
+<p></p><h5 id="theory">Theory</h5><p>LLMs are great. Unfortunately, they perform poorly when prompted to perform actions such as perform calculations, access APIs, show the weather, search the web, and others. Fortunately, LangChain allows you to combine LLMs with tools to perform various tasks. This allows you to build applications that not only understand natural language but also interact with the real world. In this stage, we'll explore the concepts of tools and how you can incorporate them into your LLM applications.</p><p><strong>Tools</strong></p><p>Simply put, a tool is a function that an LLM can use to perform any arbitrary processing logic. They can be anything from a simple calculator to a complex API wrapper. LangChain provides a wide variety of pre-built tools and allows you to create your own <a href="https://python.langchain.com/docs/how_to/custom_tools/" rel="noopener noreferrer nofollow" target="_blank">custom tools</a> as well. You can create tools in various ways. The simplest way involves creating special functions that use the <a href="https://python.langchain.com/docs/concepts/tools/" rel="noopener noreferrer nofollow" target="_blank">@tool</a> decorator. We will use this method in the example below.</p><p>Imagine you want your LLM to answer questions about a specific topic by searching DuckDuckGo. You can equip it with a DuckDuckGo Search tool. LangChain offers <a href="https://python.langchain.com/docs/integrations/tools/ddg/#related-1" rel="noopener noreferrer nofollow" target="_blank">a pre-built tool</a> for this purpose, but let's see how we can create a simple version of such a tool from scratch:</p><pre><code class="language-python"># install the required packages:
+# pip install langchain-core
+from langchain_core.tools import tool
+
+@tool("DuckDuckGoSearch")
+def duckduckgoSearchTool(query: str) -&gt; str:
+    """Useful for searching the web using DuckDuckGo."""
+    if "best coffee shops" in query.lower():
+        return "The best coffee shops in London are: Starbucks, Costa, and Caffè Nero."
+    elif "best restaurants near me" in query.lower():
+        return "The best restaurants near you are:  Pizza Hut, McDonald's, and Subway."
+    elif "python tutorial" in query.lower():
+        return "Python tutorials can be found on platforms like Codecademy and freeCodeCamp."
+    else:
+        return f"No results found for your query: {query}."
+
+
+# invoke the tool and pass the arguments
+print(duckduckgoSearchTool.invoke({"query": "best coffee shops in London"}))</code></pre><p>A tool needs key attributes such as a name, a description, and arguments. When using the <code class="language-python">@tool</code> decorator these attributes can be automatically inferred. If customization is needed, you can pass the tool's name as an argument to the decorator and provide the description as a docstring. Using relevant names and a good description makes it easier for an LLM to choose the right tool. Other <a href="https://python.langchain.com/docs/concepts/tools/#configuring-the-schema" rel="noopener noreferrer nofollow" target="_blank">customization options</a> are also available.</p><p>LangChain provides pre-built tools for common tasks, saving development time and effort. These tools can be directly imported and used, streamlining the integration process. For instance, suppose you're utilizing the <code class="language-python">DuckDuckGoSearchResults</code> tool provided by the <code class="language-python">langchain-community</code> library:</p><pre><code class="language-python"># install the required packages:
+# pip install duckduckgo-search langchain-community
+from langchain_community.tools import DuckDuckGoSearchResults
+
+try:
+    search = DuckDuckGoSearchResults()
+    result = search.invoke("Best coffee shops in London")
+    print(result)
+except Exception as e:
+    print(f"Error using DuckDuckGoSearchResults: {e}")</code></pre><p>This example demonstrates using the DuckDuckGoSearchResults tool. The <code class="language-python">search.invoke</code> method is used to trigger the tool, and return results from a DuckDuckGo search.</p><div class="alert alert-primary"><p>Explore LangChain's documentation on <a href="https://python.langchain.com/docs/integrations/tools/" rel="noopener noreferrer nofollow" target="_blank">available tools.</a> You'll find tools for searching the web, accessing databases, running shell commands, and much more. Review how you might integrate real weather APIs like <a href="https://python.langchain.com/docs/integrations/tools/openweathermap/" rel="noopener noreferrer nofollow" target="_blank">OpenWeatherMap</a> using custom tool creation.</p></div><p><strong>Calling tools</strong></p><p>Now that we understand what tools are and how to define them, let's delve into how these tools are actually used by LLMs. This process involves three key steps: binding, calling, and execution. Binding allows you to specify which tools are available for a model to use. Here, you use the <code class="language-python">.bind_tools()</code> function. We can bind our <code class="language-python">DuckDuckGoSearch</code> tool with a model with the following line:</p><pre><code class="language-python"># List of tools to be used with the language model
+# we only have one tool but it can be more than one tool
+tools_list = [duckduckgoSearchTool]
+
+model_with_tools = llm.bind_tools(tools_list)</code></pre><p>Based on the query, the model will determine which tools, if necessary, will be invoked and returns the tool name and the arguments to pass to the tool. We use the <code class="language-python">.invoke()</code> function here:</p><pre><code class="language-python">user_query = "What are the best coffee shops in London?"
+
+identified_tools = model_with_tools.invoke(user_query)</code></pre><p>Since our query requires using a tool, the model will return the following response:</p><pre><code class="language-json">{'tool_calls': [{'id': 'call_964t', 'function': {'arguments': '{"query": "best coffee shops in London"}', 'name': 'run'}, 'type': 'function'}]}</code></pre><p>As you can see, the model correctly identified that a tool call is needed and also selected the appropriate query (arguments) to pass to our tool. You can also view the tools that the model identified by accessing the <code class="language-python">.tool_calls</code> attribute of the above response:</p><pre><code class="language-bash">print(identified_tools.tool_calls)</code></pre><p>The response is a JSON object with the tool's name and arguments:</p><pre><code class="language-json">[{'name': 'duckduckgoSearchTool', 'args': {'query': 'best coffee shops in London'}, 'id': 'call_qj8f', 'type': 'tool_call'}]</code></pre><p>Finally, execute the identified tool and print the response:</p><pre><code class="language-python">response = duckduckgoSearchTool.invoke(identified_tools.tool_calls[0]) # we select the first result since we have only one tool
+print(response.content)
+
+# Output: The best coffee shops in London are: Starbucks, Costa, and Caffè Nero.</code></pre><p>The model used our tool to determine the best coffee shops in London! If you have more than one tool, you can use a <code class="language-python">for</code> loop.</p><details><summary>Full code</summary><div><pre><code class="language-python">import dotenv
+from langchain_groq import ChatGroq
+from langchain_core.tools import tool
+
+# Load environment variables from a .env file
+dotenv.load_dotenv()
+
+# Initialize the ChatGroq language model with specified parameters
+llm = ChatGroq(
+    model="llama-3.3-70b-versatile",
+    temperature=0.6,
+    max_retries=2
+)
+
+@tool("DuckDuckGoSearch")
+def duckduckgoSearchTool(query: str) -&gt; str:
+    """Useful for searching the web using DuckDuckGo."""
+    if "best coffee shops" in query.lower():
+        return "The best coffee shops in London are: Starbucks, Costa, and Caffè Nero."
+    elif "best restaurants near me" in query.lower():
+        return "The best restaurants near you are:  Pizza Hut, McDonald's, and Subway."
+    elif "python tutorial" in query.lower():
+        return "Python tutorials can be found on platforms like Codecademy and freeCodeCamp."
+    else:
+        return f"No results found for your query: {query}."
+
+tools_list = [duckduckgoSearchTool]
+
+model_with_tools = llm.bind_tools(tools_list)
+
+
+user_query = "What are the best coffee shops in London?"
+
+identified_tools = model_with_tools.invoke(user_query)
+
+response = duckduckgoSearchTool.invoke(identified_tools.tool_calls[0]) # we select the first result since we have only one tool
+print(response.content)</code></pre></div></details><p>If you are using a pre-built tool, the tool's logic is already taken care of for you saving you a lot of time.</p><h5 id="description">Description</h5><p>Let's proceed with our question answering system. Imagine that LLMs, despite being trained on vast amounts of data, do not know the distance of planets to the Sun. Also, they cannot provide information on how long it takes planets to revolve around the Sun. However, you'd like users of your system to receive answers to such questions. Therefore, you decide to equip your system with tools that will allow your LLM to answer these questions.</p><p>In this stage, you will create three custom tools and the LLM will determine which tool to use based on the query:</p><ul><li><p><code class="language-python">PlanetDistanceSun</code> — this tool should take the name of a planet as input (string) and return its approximate distance from the Sun in Astronomical Units (AU);</p></li><li><p><code class="language-python">PlanetRevolutionPeriod</code> — this tool should take the name of a planet as input (string) and return its approximate revolution period around the Sun in Earth years;</p></li><li><p><code class="language-python">PlanetGeneralInfo</code> — this tool should take the name of a planet as input (string) and handle general planet queries that are not about the planet's distance from the Sun or its revolution period. This tool should retrieve information about the planet by performing a similarity search over documents in the <code class="language-python">planets/</code> directory.</p></li></ul><p>These tools will provide the following predefined information about planets in our solar system.</p><p>Tool 1: <code class="language-python">PlanetDistanceSun</code>:</p><ul><li><p>Earth — Earth is approximately 1 AU from the Sun.</p></li><li><p>Mars — Mars is approximately 1.5 AU from the Sun.</p></li><li><p>Jupiter — Jupiter is approximately 5.2 AU from the Sun.</p></li><li><p>Pluto — Pluto is approximately 39.5 AU from the Sun.</p></li></ul><p>For any other planet name, the tool should return:</p><ul><li><p>"Information about the distance of [planet_name] from the Sun is not available in this tool."</p></li></ul><p>Tool 2: <code class="language-python">PlanetRevolutionPeriod</code>:</p><ul><li><p>Earth — Earth takes approximately 1 Earth year to revolve around the Sun.</p></li><li><p>Mars — Mars takes approximately 1.88 Earth years to revolve around the Sun.</p></li><li><p>Jupiter — Jupiter takes approximately 11.86 Earth years to revolve around the Sun.</p></li><li><p>Pluto — Pluto takes approximately 248 Earth years to revolve around the Sun.</p></li></ul><p>For any other planet name, the tool should return:</p><ul><li><p>"Information about the revolution period of [planet_name] is not available in this tool."</p></li></ul><p>Tool 3: <code class="language-python">PlanetGeneralInfo</code>:</p><p>For general queries (i.e., queries not related to distance or revolution period), this tool should perform a similarity search over documents in the planets/ directory (using embeddings) to retrieve detailed information about the specified planet. If no relevant document is found, it should return:</p><ul><li><p>"Additional information for [planet_name] is not available in this tool."</p></li></ul><div class="alert alert-primary"><p>The third tool should incorporate the logic you used in Stage three of this project.</p></div><h5 id="objectives">Objectives</h5><p>Here are the objectives for this stage:</p><ul><li><p>Use the <code class="language-python">@tool()</code> decorator to define each of these tools. Remember to provide a descriptive name for each tool as the first argument to the decorator, and a helpful docstring describing its purpose;</p></li><li><p>All tools should accept a single argument, <code class="language-python">planet_name</code> of type <code class="language-python">str</code>;</p></li><li><p>Inside each tool function, implement the logic to check the planet name and return the corresponding predefined information as a string, as described in the outputs for each tool. You can use <code class="language-python">if</code>/<code class="language-python">elif</code>/<code class="language-python">else</code> statements or a dictionary to map planet names to their values.</p></li><li><p>Print the output of <code class="language-python">.tool_calls</code>, and the output when a query is issued.</p></li></ul><h5 id="examples">Examples</h5><p>The greater-than symbol followed by a space (<code class="language-python">&gt; </code>) represents the user input. Note that it's not part of the input.</p><p><strong>Example 1: </strong>Mars distance query</p><pre><code class="language-bash">&gt; What is the distance of Mars from the sun? 
+Mars is approximately 1.5 AU from the Sun.
+[{'name': 'PlanetDistanceSun', 'args': {'planet_name': 'Mars'}, 'id': 'call_a2xj', 'type': 'tool_call'}]</code></pre><p><strong>Example 2: </strong>Neptune distance query</p><pre><code class="language-bash">&gt; How long does it take Neptune to revolve around the sun? 
+Information about the revolution period of Neptune is not available in this tool.
+[{'name': 'PlanetRevolutionPeriod', 'args': {'planet_name': 'Neptune'}, 'id': 'call_zakf', 'type': 'tool_call'}]</code></pre><p><strong>Example 3: </strong>Jupiter general query</p><pre><code class="language-bash">&gt; What is up with Jupiter anyway? 
+Jupiter
+Jupiter is the largest planet in our solar system.
+This gas giant is primarily composed of hydrogen and helium, with a prominent Great Red Spot and numerous moons.
+[{'name': 'PlanetGeneralInfo', 'args': {'query': 'interesting facts about Jupiter'}, 'id': 'call_4xjw', 'type': 'tool_call'}]</code></pre>
+</div>

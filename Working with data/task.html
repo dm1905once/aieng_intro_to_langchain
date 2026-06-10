@@ -1,0 +1,9 @@
+<div class="step-text">
+<h5 id="description">Description</h5><p>Let's modify our system such that when a user requests information, it is retrieved from a vector database. The vector database should store embeddings of planet information. When a query is issued, the relevant document should be retrieved. Finally, print the contents of the retrieved document. To keep things simple, you are required to use the Chroma vector store.</p><h5 id="objectives">Objectives</h5><p>Your implementation should:</p><ul><li><p>Load planetary descriptions from the text files in the <code class="language-bash">planets/</code> directory.</p></li><li><p>Convert this data into vector embeddings using any embedding model.</p></li><li><p>Store embeddings in the Chroma vector store.</p></li><li><p>Fetch relevant documents based on user queries.</p></li><li><p>Print the contents of the most similar document.</p></li></ul><h5 id="examples">Examples</h5><p>The greater-than symbol followed by a space (<code class="language-bash">&gt; </code>) represents the user input. Note that it's not part of the input.</p><p><strong>Example 1: </strong><em>Which planet supports life?</em></p><pre><code class="language-bash">&gt; Which planet supports life? 
+Earth
+Earth is the third planet from the Sun and the only known planet to support life.
+It has a diverse environment, liquid water on its surface, and a protective atmosphere that sustains life.</code></pre><p><strong>Example 2: </strong>Which planet is closest to the sun?</p><pre><code class="language-bash">&gt; Which planet is closest to the sun? 
+Mercury
+Mercury is the smallest planet in the solar system and the closest to the Sun.
+It has a heavily cratered surface and a very thin atmosphere, leading to extreme temperature variations.</code></pre>
+</div>

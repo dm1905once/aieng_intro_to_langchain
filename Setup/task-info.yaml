@@ -1,0 +1,47 @@
+type: edu
+files:
+  - name: planets/earth.txt
+    visible: true
+    learner_created: false
+  - name: planets/jupiter.txt
+    visible: true
+    learner_created: false
+  - name: planets/mars.txt
+    visible: true
+    learner_created: false
+  - name: planets/mercury.txt
+    visible: true
+    learner_created: false
+  - name: planets/neptune.txt
+    visible: true
+    learner_created: false
+  - name: planets/pluto.txt
+    visible: true
+    learner_created: false
+  - name: planets/saturn.txt
+    visible: true
+    learner_created: false
+  - name: planets/uranus.txt
+    visible: true
+    learner_created: false
+  - name: planets/venus.txt
+    visible: true
+    learner_created: false
+  - name: test/__init__.py
+    visible: true
+    learner_created: false
+  - name: test/tests.py
+    visible: true
+    learner_created: false
+  - name: main.py
+    visible: true
+    learner_created: false
+  - name: tests.py
+    visible: true
+    learner_created: false
+feedback_link: https://hyperskill.org/projects/514/stages/3020/implement#comment
+status: Solved
+feedback:
+  message: Congratulations!
+  time: "Tue, 09 Jun 2026 19:05:00 UTC"
+record: -1

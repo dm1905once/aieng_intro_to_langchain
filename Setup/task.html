@@ -1,0 +1,39 @@
+<div class="step-text">
+<h5 id="description">Description</h5><p>In this stage, you will set up your environment by ensuring you have Python installed and a virtual environment configured. As part of the project, a virtual environment is already configured. Your next task is to install key packages such as <code class="language-python">langchain-groq</code>, <code class="language-python">langchain_core</code>, and <code class="language-python">python-dotenv</code>. You can start experimenting with <a href="https://python.langchain.com/docs/integrations/providers/groq/" rel="noopener noreferrer nofollow" target="_blank">Groq</a> chat models for free by signing up for an <a href="https://console.groq.com/keys" rel="noopener noreferrer nofollow" target="_blank">API key</a>. If you plan to use another provider such as OpenAI, install <code class="language-python">langchain_openai</code> instead.</p><p>Next, configure your project’s <code class="language-python">.env</code> file by adding your API keys <code class="language-python">GROQ_API_KEY</code> (or <code class="language-python">OPENAI_API_KEY</code> if using OpenAI).</p><div class="alert alert-danger"><p>Hyperskill does not track or store the <code class="language-python">.env</code> file. However, if you plan to share your project to GitHub or other VCSs, ensure to exclude it (via <code class="language-python">.gitignore</code>) to avoid sharing it with the public.</p></div><p>Once your environment is ready, use the following code to test if everything is set up correctly:</p><x-tabs><x-tab name="OpenAI"><pre><code class="language-python"># install the required packages:
+# pip install langchain-core python-dotenv langchain-openai
+ 
+from langchain_core.prompts import PromptTemplate
+from langchain_openai import ChatOpenAI
+import dotenv
+import os
+
+dotenv.load_dotenv()
+
+llm = ChatOpenAI(api_key=os.getenv("OPENAI_API_KEY")) # if using a different base_url and model, pass them as well
+
+question = input()
+template = PromptTemplate.from_template("You are a helpful assistant who answers questions users may have. You are asked: {question}.")
+
+prompt = template.invoke({"question": question})
+response = llm.invoke(prompt)
+print(response.content)</code></pre></x-tab><x-tab name="Groq"><pre><code class="language-python"># install the required packages:
+# pip install langchain-groq langchain-core python-dotenv
+
+from langchain_core.prompts import PromptTemplate
+from langchain_groq import ChatGroq
+import dotenv
+
+dotenv.load_dotenv()
+
+llm = ChatGroq(model="llama-3.3-70b-versatile", temperature=0.5, max_retries=2)
+
+question = input()
+template = PromptTemplate.from_template("You are a helpful assistant who answers questions users may have. You are asked: {question}.")
+
+prompt = template.invoke({"question": question})
+response = llm.invoke(prompt)
+print(response.content)</code></pre></x-tab></x-tabs><p>Don't worry, we'll discuss what all this means in the next stages.</p><div class="alert alert-primary"><p>If your terminal does not automatically activate the virtual environment for you, you can manually run the activation script located at <code class="language-python">.idea/VirtualEnvironment/Scripts</code> for your terminal.</p></div><h5 id="objectives">Objectives</h5><p>Here are the objectives for this stage:</p><ul><li><p>Set up your development environment;</p></li><li><p>Install the necessary packages: <code class="language-python">langchain-groq</code> or <code class="language-python">langchain-openai</code>, <code class="language-python">langchain_core</code>, and <code class="language-python">python-dotenv</code>;</p></li><li><p>Create and configure a <code class="language-python">.env</code> file with your <code class="language-python">GROQ_API_KEY</code> or <code class="language-python">OPENAI_API_KEY</code> to securely manage your API credentials;</p></li><li><p>Paste the provided snippet for your chat model in the <code class="language-python">main.py</code> file to verify your setup and run tests.</p></li></ul><h5 id="examples">Examples</h5><p>The greater-than symbol followed by a space (<code class="language-python">&gt; </code>) represents the user input. Note that it's not part of the input.</p><p><strong>Example 1: </strong>Capital inquiry</p><pre><code class="language-bash">&gt; What is the capital of France?
+The capital of France is Paris. </code></pre><p><strong>Example 2: </strong>Literary inquiry</p><pre><code class="language-bash">&gt; Who wrote "1984"?
+The dystopian novel "1984" was written by George Orwell...</code></pre><p><strong>Example 3: </strong>Temperature inquiry</p><pre><code class="language-bash">&gt; What is the boiling point of water at sea level?
+The boiling point of water at sea level is 100 degrees Celsius (°C) or 212 degrees Fahrenheit (°F)...</code></pre>
+</div>

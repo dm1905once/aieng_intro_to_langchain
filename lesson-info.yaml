@@ -1,0 +1,7 @@
+type: framework
+content:
+  - Setup
+  - LLM interfaces and prompting
+  - Working with data
+  - Using tools
+  - Putting it all together
