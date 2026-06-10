@@ -77,3 +77,4 @@ def planet_general_info_tool(planet_name : str) -> str:
         return f"Additional information for {planet_name} is not available in this tool."
 
 # Run queries
+# TODO: need to update the queries
