@@ -42,6 +42,12 @@ db.add_documents(documents=documents)
 # Define tools
 @tool("PlanetDistanceSun")
 def planet_distance_sun_tool(planet_name: str) -> str:
+    """ take the name of a planet as input (string) and return its approximate distance from the Sun in Astronomical Units (AU)
+    Args:
+        name of a planet
+    Returns:
+        String with an informative message
+    """
     match planet_name.lower():
         case "earth":
             return "Earth is approximately 1 AU from the Sun."
@@ -56,6 +62,12 @@ def planet_distance_sun_tool(planet_name: str) -> str:
 
 @tool("PlanetRevolutionPeriod")
 def planet_revolution_period_tool(planet_name: str) -> str:
+    """ take the name of a planet as input (string) and return its approximate revolution period around the Sun in Earth years
+    Args:
+        name of a planet
+    Returns:
+        String with an informative message
+    """
     match planet_name.lower():
         case "earth":
             return "Earth takes approximately 1 Earth year to revolve around the Sun."
@@ -70,6 +82,12 @@ def planet_revolution_period_tool(planet_name: str) -> str:
 
 @tool("PlanetGeneralInfo")
 def planet_general_info_tool(planet_name : str) -> str:
+    """ take the name of a planet and performs a similarity search to obtain general information about the planet
+    Args:
+         name of a planet
+    Returns:
+        String with an informative message
+    """
     results = db.similarity_search(planet_name)
     if results:
         return results[0].page_content
@@ -77,4 +95,15 @@ def planet_general_info_tool(planet_name : str) -> str:
         return f"Additional information for {planet_name} is not available in this tool."
 
 # Run queries
-# TODO: need to update the queries
+tool_list = [planet_distance_sun_tool, planet_revolution_period_tool, planet_general_info_tool]
+llm_with_tools = llm.bind_tools(tool_list)
+query = input()
+
+response = llm_with_tools.invoke(query)
+
+for tool_call in response.tool_calls:
+    selected_tool = {"PlanetDistanceSun": planet_distance_sun_tool, "PlanetRevolutionPeriod": planet_revolution_period_tool, "PlanetGeneralInfo" : planet_general_info_tool}[tool_call["name"]]
+    tool_response = selected_tool.invoke(tool_call)
+    print(tool_response.content)
+
+print(response.tool_calls)
