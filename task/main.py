@@ -1,8 +1,12 @@
+from typing import Any
+
 from langchain_core.prompts import PromptTemplate
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_community.document_loaders import DirectoryLoader, TextLoader
 from langchain_chroma import Chroma
+from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.tools import tool
+from langchain_core.runnables import chain
 import dotenv
 import os
 
@@ -39,6 +43,7 @@ db = Chroma(
 # add documents
 db.add_documents(documents=documents)
 
+
 # Define tools
 @tool("PlanetDistanceSun")
 def planet_distance_sun_tool(planet_name: str) -> str:
@@ -60,6 +65,7 @@ def planet_distance_sun_tool(planet_name: str) -> str:
         case _:
             return f"Information about the distance of {planet_name} from the Sun is not available in this tool."
 
+
 @tool("PlanetRevolutionPeriod")
 def planet_revolution_period_tool(planet_name: str) -> str:
     """ take the name of a planet as input (string) and return its approximate revolution period around the Sun in Earth years
@@ -80,8 +86,9 @@ def planet_revolution_period_tool(planet_name: str) -> str:
         case _:
             return f"Information about the revolution period of {planet_name} is not available in this tool."
 
+
 @tool("PlanetGeneralInfo")
-def planet_general_info_tool(planet_name : str) -> str:
+def planet_general_info_tool(planet_name: str) -> str:
     """ take the name of a planet and performs a similarity search to obtain general information about the planet
     Args:
          name of a planet
@@ -94,16 +101,27 @@ def planet_general_info_tool(planet_name : str) -> str:
     else:
         return f"Additional information for {planet_name} is not available in this tool."
 
+
+tool_dictionary = {
+    "PlanetDistanceSun": planet_distance_sun_tool,
+    "PlanetRevolutionPeriod": planet_revolution_period_tool,
+    "PlanetGeneralInfo": planet_general_info_tool
+}
+llm_with_tools = llm.bind_tools(list(tool_dictionary.values()))
+
+@chain
+def function_call(llm_output) ->str:
+    responses = []
+    for tool_call in llm_output.tool_calls:
+        selected_tool = tool_dictionary[tool_call["name"]]
+        tool_response = selected_tool.invoke(tool_call)
+        responses.append(tool_response.content)
+    return ", ".join(responses)
+
 # Run queries
-tool_list = [planet_distance_sun_tool, planet_revolution_period_tool, planet_general_info_tool]
-llm_with_tools = llm.bind_tools(tool_list)
-query = input()
+prompt = ChatPromptTemplate.from_template("You are a helpful assistant who answers questions users may have about planets in the Solar System. You are asked: {question}.")
 
-response = llm_with_tools.invoke(query)
-
-for tool_call in response.tool_calls:
-    selected_tool = {"PlanetDistanceSun": planet_distance_sun_tool, "PlanetRevolutionPeriod": planet_revolution_period_tool, "PlanetGeneralInfo" : planet_general_info_tool}[tool_call["name"]]
-    tool_response = selected_tool.invoke(tool_call)
-    print(tool_response.content)
-
-print(response.tool_calls)
+chain = prompt | llm_with_tools | function_call
+output = chain.invoke({"question": input()})
+print(output)
+print(chain)
