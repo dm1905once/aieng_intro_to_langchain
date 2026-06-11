@@ -107,7 +107,9 @@ tool_dictionary = {
     "PlanetRevolutionPeriod": planet_revolution_period_tool,
     "PlanetGeneralInfo": planet_general_info_tool
 }
-llm_with_tools = llm.bind_tools(list(tool_dictionary.values()))
+#llm_with_tools = llm.bind_tools(list(tool_dictionary.values()))
+llm_with_tools = llm.bind(tools=list(tool_dictionary.values()))
+
 
 @chain
 def function_call(llm_output) ->str:
