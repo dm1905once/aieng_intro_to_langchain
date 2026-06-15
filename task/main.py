@@ -24,7 +24,7 @@ loader = DirectoryLoader(
     path="planets/",
     glob="**/*.txt",
     loader_cls=TextLoader,
-    show_progress=True
+    show_progress=False
 )
 documents = loader.load()
 
